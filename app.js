@@ -9,7 +9,7 @@ async function getRecipes() {
 
     if (response.ok == false) {
       const message = await response.json();
-      throw new Error(message);
+      throw new Error(`Failed to fetch details: ${response.statusText}`);
     }
     const recipes = await response.json();
 
@@ -29,46 +29,7 @@ async function getRecipes() {
             </div>
       `;
 
-      recipeCard.addEventListener("click", async (event) => {
-        const recipeId = event.currentTarget.dataset.id;
-        const url = `http://localhost:3030/jsonstore/cookbook/details/${recipeId}`;
-
-        try {
-          const response = await fetch(url);
-
-          if (response.ok == false) {
-            const message = await response.json();
-            throw new Error(message);
-          }
-
-          const recipeDetails = await response.json();
-
-          main.innerHTML = `
-    <article>
-        <h2>${recipeDetails.name}</h2>
-        <div class="band">
-            <div class="thumb">
-                <img src="${recipeDetails.img}">
-            </div>
-            <div class="ingredients">
-                <h3>Ingredients:</h3>
-                <ul>
-                    ${recipeDetails.ingredients
-                      .map((ingredient) => `<li>${ingredient}</li>`)
-                      .join("")}
-                </ul>
-            </div>
-        </div>
-        <div class="description">
-            <h3>Preparation:</h3>
-            ${recipeDetails.steps.map((step) => `<p>${step}</p>`).join("")}
-        </div>
-    </article>
-  `;
-        } catch (error) {
-          console.log(error.message);
-        }
-      });
+      recipeCard.addEventListener("click", showInfo);
 
       main.appendChild(recipeCard);
     });
@@ -78,3 +39,44 @@ async function getRecipes() {
 }
 
 getRecipes();
+
+async function showInfo(event) {
+  const recipeId = event.currentTarget.dataset.id;
+  const url = `http://localhost:3030/jsonstore/cookbook/details/${recipeId}`;
+
+  try {
+    const response = await fetch(url);
+
+    if (response.ok == false) {
+      const message = await response.json();
+      throw new Error(`Failed to fetch details: ${response.statusText}`);
+    }
+
+    const recipeDetails = await response.json();
+
+    main.innerHTML = `
+<article>
+    <h2>${recipeDetails.name}</h2>
+    <div class="band">
+        <div class="thumb">
+            <img src="${recipeDetails.img}">
+        </div>
+        <div class="ingredients">
+            <h3>Ingredients:</h3>
+            <ul>
+                ${recipeDetails.ingredients
+                  .map((ingredient) => `<li>${ingredient}</li>`)
+                  .join("")}
+            </ul>
+        </div>
+    </div>
+    <div class="description">
+        <h3>Preparation:</h3>
+        ${recipeDetails.steps.map((step) => `<p>${step}</p>`).join("")}
+    </div>
+</article>
+`;
+  } catch (error) {
+    console.log(error.message);
+  }
+}
